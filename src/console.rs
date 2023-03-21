@@ -1,6 +1,6 @@
 use std::{collections::VecDeque, fmt::Error};
 
-use crate::hive_objects;
+use crate::hive_objects::{self, HiveObject, HiveObjectsError};
 
 pub mod hive_guard;
 
@@ -65,7 +65,7 @@ fn create(parameters: &str) -> Result<String, ConsoleError> {
     };
     let processedParameters = processedParameters[1..].join(" ");
 
-    let success_flag: Option<String> = match object {
+    let spawned_object Result<HiveObject, HiveObjectsError> = match object {
         "community" => hive_objects::Community.new(processedParameters),
         "user" => hive_objects::User.new(processedParameters),
         "debate" => hive_objects::Debate.new(processedParameters),
