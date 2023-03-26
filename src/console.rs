@@ -1,19 +1,14 @@
 use std::{collections::VecDeque, fmt::Error};
+use std::error::Error;
+use std::fmt;
 
 use crate::hive_objects::{self, HiveObject, HiveObjectsError};
 
 pub mod hive_guard;
 
 #[derive(Debug)]
-pub enum ConsoleError {
-    InvalidParamLen,
-    InvalidCommand,
-    InvalidObjectName,
-    InvalidId,
-    MissingObjectName,
-    MissingId,
-    MissingParams,
-    FailedInCreation,
+pub struct ConsoleError {
+    message: String,
 }
 pub struct HiveCommand {
     prompt: String,
@@ -36,11 +31,11 @@ fn parse_argument(argument: String) -> Option<HiveCommand> {
 /// This function contains the logic to handle a HiveCommand executing a function based on the `HiveCommand.prompt`
 /// Returns a Some(String) when successful and a None when not.
 fn handle_command(command: HiveCommand) -> Result<String, ConsoleError> {
-    let acceptable_commands = vec!["create", "destroy", "update", "show", "all", "join", "leave", "post", "vote"].map(String::from).to_vec();
+    let acceptable_commands = vec!["create", "destroy", "update", "show", "all", "join", "leave", "post", "vote"];
     let pattern: &str = &command.prompt;
     
     match pattern {
-        "create" => create(&command.parameters),
+        "create" => Ok(create(&command.parameters).unwrap()),
         //"destroy" => destroy(&command.parameters),
         //"update" => update(&command.parameters),
         //"show" => show(&command.parameters),
@@ -61,22 +56,20 @@ fn create(parameters: &str) -> Result<String, ConsoleError> {
     let mut processedParameters: Vec<&str>  = parameters.split(" ").collect();
     let object: &str = match processedParameters.get(0) {
         Some(i) => i,
-        None => return Err(ConsoleError::MissingObjectName),
+        None => return Err(ConsoleError::FailedInCreation),
     };
     let processedParameters = processedParameters[1..].join(" ");
 
-    let spawned_object Result<HiveObject, HiveObjectsError> = match object {
-        "community" => hive_objects::Community.new(processedParameters),
-        "user" => hive_objects::User.new(processedParameters),
-        "debate" => hive_objects::Debate.new(processedParameters),
-        "thought" => hive_objects::Thought.new(processedParameters),
+    let spawned_object = match object {
+        //"community" => hive_objects::Community.new(processedParameters),
+        "user" => hive_objects::User::new(processedParameters),
+        //"debate" => hive_objects::Debate.new(processedParameters),
+        //"thought" => hive_objects::Thought.new(processedParameters),
+        _ => Err(ConsoleError::FailedInCreation),
     };
-    if success_flag == None {
-        return Err(ConsoleError::FailedInCreation);
-    } else {
-        Ok(success_flag.unwrap())
-    }
-    
+
+    let object_id = spawned_object.get_id().to_string();
+    return Ok(object_id);
 }
 
 #[cfg(test)]
